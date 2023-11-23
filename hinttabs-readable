@@ -1,0 +1,200 @@
+/* hintable tab selection - big long command js script version */
+/* storing some values in the tri object for convenience */
+if (tri.hinttabspopup === undefined) {
+	/* some properties to change the layout of the grid */
+	tri.hinttabspopup = {};
+	tri.hinttabspopup.maxColumns = 1;
+	tri.hinttabspopup.maxCells = 30;
+	tri.hinttabspopup.widthPercentage = 75;
+	tri.hinttabspopup.topOffset = 7; /* rem - dist from top of window */
+	tri.hinttabspopup.minCellWidth = 50; /* px - fewer columns if window isn't wide enough */
+	tri.hinttabspopup.bTabIdInTitle = false; /* display window and tab id in titles (can't hint the numbers so not that useful) */
+	tri.hinttabspopup.gridGap = "5px";
+	tri.hinttabspopup.bFavicons = true;
+	tri.hinttabspopup.iconSize = 1; /* em - moves text vertically if not 1em */
+	
+	/* these are some selectors for elements created for the tab grid - could be added to custom tridactyl theme */
+	tri.hinttabspopup.stylerules = [".tri-grid-tabs-container { height: fit-content; font-family: var(--tridactyl-cmdl-font-family); color: var(--tridactyl-cmdl-fg); font-size: var(--tridactyl-cmdl-font-size); z-index: 9999; filter: drop-shadow(0 0 10rem #3a0080); }",
+		
+		".tri-grid-tabs-container>div { padding: 0.5em; overflow: clip; text-overflow: ellipsis; white-space: nowrap; text-align: left; background-color: #101216 !important; padding-left: 1.5em; padding-right: 1.5em; } ",
+		
+		".tri-grid-tabs-container>div>p { display: inline; } ",
+		
+		".tri-grid-tabs-container>div>p.tri-tab-title { color: #e4e4e4 !important; }",
+		
+		".tri-grid-tabs-container>div>p.tri-tab-url { color: slateblue !important; } ",
+		
+		".tri-grid-tabs-container>div>p>img { padding: 0 1em 0 0; display: inline-block; vertical-align: middle; height:" + tri.hinttabspopup.iconSize + "em; }",
+		
+		".tri-grid-tabs-container>div.TridactylHintActive { background-color: #202020 !important; } ",
+		
+		".tri-grid-tabs-container>div.TridactylHintActive>p {  } ",
+		
+		".tri-grid-tabs-container>div.TridactylHintActive>p.tri-tab-title { color: white !important; }",
+		
+		".tri-grid-tabs-container>div.TridactylHintActive>p.tri-tab-url { color: yellow !important; } ",
+		
+		".tri-grid-tabs-container>div>p>img {  }",
+		
+		".tri-tabs-more { margin-left:" + tri.hinttabspopup.gridGap + "; margin-right:" + tri.hinttabspopup.gridGap + "; height:100%; background-color: #101216 !important; display: flex; align-items: center; justify-content: center; color: #e4e4e4 !important; } " ];
+		
+	tri.hinttabspopup.gridFromArr = function(arr, cols, callback) {
+		let rows = Math.ceil(arr.length / cols);
+		var grid = document.createElement('div');
+	    grid.setAttribute('style', 'grid-template-columns: repeat('+cols+', minmax(0, 1fr));');
+	    grid.style.display = 'grid';
+	    
+	    for(var i = 0; i < tri.hinttabspopup.maxCells && i < arr.length; ++i) {
+	        let cell = document.createElement('div');
+	        callback(arr[i], cell);
+	        grid.appendChild(cell);
+	    }
+	    
+	    return grid;
+	};
+		
+	tri.hinttabspopup.addStylesheet = function(rulesArr) {
+	    let stylesheet = document.createElement('style');
+		document.head.appendChild(stylesheet);
+	    for (let i = 0; i < rulesArr.length; ++i) {
+	        stylesheet.sheet.insertRule(rulesArr[i]);
+	    }
+		return stylesheet;
+	};
+	
+	tri.hinttabspopup.makeTabGrid = async function(bTabAll = false, start = 0) {
+		let alltabs = await tri.browserBg.tabs.query(bTabAll ? {} : {currentWindow:true});
+		let tabs = alltabs.slice(start, tri.hinttabspopup.maxCells);
+		
+		let layoutGrid = document.createElement("div");
+		
+		layoutGrid.style.display = 'grid';
+	    layoutGrid.style.position = 'fixed';
+ 	    layoutGrid.style.top = tri.hinttabspopup.topOffset + "rem";
+	    layoutGrid.style.width = "100%";
+	    layoutGrid.style.height = "fit-content";  
+	    
+	    layoutGrid.style["grid-template-columns"] = ((100 - tri.hinttabspopup.widthPercentage) / 2) + "fr " + tri.hinttabspopup.widthPercentage + "fr " + ((100 - tri.hinttabspopup.widthPercentage) / 2) + "fr";  
+	    
+	    let prevTabsParent = document.createElement("div");
+	    let nextTabsParent = document.createElement("div");
+	    
+	    let prevTabs = document.createElement('div');
+	    let nextTabs = document.createElement('div');
+	    
+	    prevTabs.id = "tri-tabs-prev";
+	    nextTabs.id = "tri-tabs-prev";
+	
+	    nextTabs.innerText = "->";
+	    
+	    prevTabs.className = "tri-tabs-more";
+	    nextTabs.className = "tri-tabs-more";
+	    
+	    let columns = Math.min(tri.hinttabspopup.maxColumns, tabs.length);
+		if (window.innerWidth * tri.hinttabspopup.widthPercentage * 0.01 / columns < tri.hinttabspopup.minCellWidth) {
+			columns = Math.max(1, Math.floor(window.innerWidth / tri.hinttabspopup.minCellWidth));
+		}
+		
+		let windex = 0;
+		let wid = -1;
+	
+		let grid = tri.hinttabspopup.gridFromArr(tabs, columns, (tab, cell) => {
+			let thiswindow = windex;
+			if (wid != tab.windowId) {
+				/* get window index from window id */
+				wid = tab.windowId;
+				thiswindow = ++windex;
+			}
+					
+			/* tab information provided by tab.query */
+			let title = document.createElement("p");
+			let url = document.createElement("p");
+			title.className = "tri-tab-title";
+			url.className = "tri-tab-url";
+			
+			/* favicons and private browsing icons */
+			if (tri.hinttabspopup.bFavicons) {
+				if (tab.incognito) {
+					let incogicon = document.createElement("img");
+					incogicon.src = "chrome://global/skin/icons/indicator-private-browsing.svg";
+					title.appendChild(incogicon);
+				}
+				else {
+					title.style["padding-left"] = 2 * tri.hinttabspopup.iconSize + "em";
+				}
+				if (tab.favIconUrl !== undefined) {
+					let favicon = document.createElement("img");
+					favicon.src = tab.favIconUrl;
+					url.appendChild(favicon);
+				}
+				else {
+					url.style["padding-left"] = 2 * tri.hinttabspopup.iconSize + "em";		
+				}
+			}
+			
+			let tabId = tri.hinttabspopup.bTabIdInTitle ? (bTabAll ? windex + "." + (tab.index + 1) : (tab.index + 1)) + " " : "";
+			
+			title.insertAdjacentText("beforeEnd", tabId + tab.title);
+			url.insertAdjacentText("beforeEnd", tab.url);
+			cell.appendChild(title);
+			cell.appendChild(document.createElement('br'));
+			cell.appendChild(url);
+	
+			/* this callback switches the tab when hinting (or clicking for that matter) */
+			cell.onclick = () => {
+				tri.excmds.tab((bTabAll ? thiswindow + "." : "") + (tab.index + 1)); 
+			}
+		});
+		
+		grid.style["grid-gap"] = "5px";
+		grid.className = "tri-grid-tabs-container";
+		let dotclass = "." + grid.className;
+	
+		layoutGrid.appendChild(prevTabsParent);
+		layoutGrid.appendChild(grid);
+		layoutGrid.appendChild(nextTabsParent);
+	
+		document.body.parentElement.appendChild(layoutGrid);
+		
+		/* add stylesheet once (per load of tridactyl at least) */
+		if (tri.hinttabspopup.stylesheet === undefined) {
+			tri.hinttabspopup.stylesheet = tri.hinttabspopup.addStylesheet(tri.hinttabspopup.stylerules);
+		}
+		/* enable the stylesheet if it exists (it's probably not disabled anyway) */
+		else {
+			tri.hinttabspopup.stylesheet.disabled = false;
+		}
+		
+		/* check if there are more tabs than are being displayed and add buttons to see them */
+		let numHintables = tri.hinting_content.hintables(".tri-grid-tabs-container>div")[0].elements.length;
+	
+		if (start + numHintables < alltabs.length) {
+			nextTabsParent.appendChild(nextTabs);
+			nextTabs.onclick = () => {
+				tri.hinttabspopup.hint(bTabAll, start + numHintables);
+			};
+		}
+
+		if (start > 0) {
+			prevTabs.innerText = "<-";
+	    	prevTabsParent.appendChild(prevTabs);
+	    	prevTabs.onclick = () => {
+				tri.hinttabspopup.hint(bTabAll, Math.max(0, start - tri.hinttabspopup.maxCells));
+			};
+		}
+	    
+		return layoutGrid;
+	};
+	
+	/* make a grid of tabs and hint them */
+	tri.hinttabspopup.hint = async function(bTabAll = false, start = 0) {
+		let grid = await tri.hinttabspopup.makeTabGrid(bTabAll, start);
+		return tri.excmds.hint("-c", ".tri-grid-tabs-container>div,.tri-tabs-more").then((tab) => {
+			grid.remove();
+			return tab;
+		});
+	};
+}
+
+tri.hinttabspopup.hint();
+
