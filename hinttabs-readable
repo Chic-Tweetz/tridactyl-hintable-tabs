@@ -63,7 +63,7 @@ if (tri.hinttabspopup === undefined) {
 
     ht.makeTabGrid = async function(bTabAll = false, start = 0) {
         let alltabs = await tri.browserBg.tabs.query(bTabAll ? {} : {currentWindow:true});
-        let tabs = alltabs.slice(start, ht.maxCells);
+        let tabs = alltabs.slice(start, start + ht.maxCells);
 
         let layoutGrid = document.createElement("div");
 
@@ -165,7 +165,6 @@ if (tri.hinttabspopup === undefined) {
         /* check if there are more tabs than are being displayed and add buttons to see them */
         let numHintables = tri.hinting_content.hintables(".tri-grid-tabs-container>div")[0].elements.length;
 
-        /* next arrow always shows for some reason */
         if (start + numHintables < alltabs.length) {
             nextTabsParent.appendChild(nextTabs);
             nextTabs.onclick = () => ht.hint(bTabAll, start + numHintables);
@@ -174,7 +173,7 @@ if (tri.hinttabspopup === undefined) {
         if (start > 0) {
             prevTabs.innerText = "<-";
             prevTabsParent.appendChild(prevTabs);
-            prevTabs.onclick = () => ht.hint(bTabAll, Math.max(0, start - ht.maxCells));
+            prevTabs.onclick = () => ht.hint(bTabAll, Math.max(0, start - numHintables));
         }
 
         return layoutGrid;
@@ -189,5 +188,3 @@ if (tri.hinttabspopup === undefined) {
         });
     };
 }
-
-tri.hinttabspopup.hint();
