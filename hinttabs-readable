@@ -165,6 +165,7 @@ if (tri.hinttabspopup === undefined) {
         /* check if there are more tabs than are being displayed and add buttons to see them */
         let numHintables = tri.hinting_content.hintables(".tri-grid-tabs-container>div")[0].elements.length;
 
+        /* next arrow always shows for some reason */
         if (start + numHintables < alltabs.length) {
             nextTabsParent.appendChild(nextTabs);
             nextTabs.onclick = () => ht.hint(bTabAll, start + numHintables);
