@@ -15,7 +15,7 @@ if (tri.hinttabspopup === undefined) {
     ht.iconSize = 1; /* em - moves text vertically if not 1em */
 
     /* these are some selectors for elements created for the tab grid - could be added to custom tridactyl theme */
-    ht.stylerules = [".tri-grid-tabs-container { height: fit-content; font-family: var(--tridactyl-cmdl-font-family); color: var(--tridactyl-cmdl-fg); font-size: var(--tridactyl-cmdl-font-size); z-index: 9999; filter: drop-shadow(0 0 10rem #3a0080); }",
+    ht.stylerules = [".tri-grid-tabs-container { height: fit-content; font-family: var(--tridactyl-cmdl-font-family); color: var(--tridactyl-cmdl-fg); font-size: var(--tridactyl-cmdl-font-size); filter: drop-shadow(0 0 10rem #3a0080); }",
 
         ".tri-grid-tabs-container>div { padding: 0.5em; overflow: clip; text-overflow: ellipsis; white-space: nowrap; text-align: left; background-color: #101216 !important; padding-left: 1.5em; padding-right: 1.5em; } ",
 
@@ -72,6 +72,7 @@ if (tri.hinttabspopup === undefined) {
         layoutGrid.style.top = ht.topOffset + "rem";
         layoutGrid.style.width = "100%";
         layoutGrid.style.height = "fit-content";
+        layoutGrid.style["z-index"] = 2147483645; /* just below hint tags */
 
         layoutGrid.style["grid-template-columns"] = ((100 - ht.widthPercentage) / 2) + "fr " + ht.widthPercentage + "fr " + ((100 - ht.widthPercentage) / 2) + "fr";
 
