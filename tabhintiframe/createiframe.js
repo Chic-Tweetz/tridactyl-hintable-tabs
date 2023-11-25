@@ -1,3 +1,4 @@
+// add the iframe in first
 let iframe = document.createElement("iframe");
 
 iframe.src = "tabgrid.html";
@@ -13,6 +14,7 @@ let hintparent = document.createElement("div");
 
 document.body.parentElement.appendChild(hintparent);
 
+// messages back from the iframe contain tab ids and the locations of the elements within the iframe
 window.addEventListener("message", (event) => { hintparent.innerText = "";
 	let iframeRect = iframe.getBoundingClientRect();
 	for(let i = 0; i < event.data.length; i+=3) {
