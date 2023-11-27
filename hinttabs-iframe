@@ -77,7 +77,7 @@ th.makeIframeHtml = async function (iframe, start = 0) {
     for (let i = start; i < Math.min(th.maxVisibleCells, th.tabArray.length); ++i) {
         let tab = th.tabArray[i];
         let faviStyle = (th.tabArray[i].favIconUrl === undefined ? ' style="visibility:hidden"' : '');
-        let incogStyle = (th.tabArray[i].incognito === undefined ? ' style="visibility:hidden"' : '');
+        let incogStyle = (th.tabArray[i].incognito === false ? ' style="visibility:hidden"' : '');
 
         /* oh no do you need to sanitise favicon src as well ... that's a lot of text */
 
