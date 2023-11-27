@@ -1,4 +1,7 @@
 // This one uses a blob as the source of the iframe and requires no js or messaging in the iframe doc
+// because this creates a string for the html source, the data from the tabs (title, url, favIconUrl)
+// can cause issues if they have html tags etc
+// hintable elements are put into a grid with the same attributes as the iframe's tab grid so they line up with a bit of maths
 
 tri.tabhintpopup = {};
 const th = tri.tabhintpopup;
@@ -71,6 +74,7 @@ th.populateTabArray = async function(bTabAll = false, start = 0) {
 
 /* necessary because of the way I'm currently creating the iframe source */
 /* not necessary when setting textContent of grid cells but there is no js in the iframe atm */
+
 th.makeTextSafe = function(unsafe) {
   if (unsafe === undefined) { return ""; }
   return unsafe.replaceAll("&", "&amp").replaceAll("<", "&lt").replaceAll(">", "&gt").replaceAll("\"", "&quot").replaceAll("'", "&#39");
@@ -79,11 +83,11 @@ th.makeTextSafe = function(unsafe) {
 th.makeHintGrid = async function() {
   let parent = document.createElement("div");
 
-    parent.style.position = "fixed";
-    parent.style.width = "100%";
-    parent.style.top = 0;
-    parent.style["margin-top"] = s.topMargin;
-    parent.style["z-index"] = 2147483644; /* below hint spans, above iframe */
+  parent.style.position = "fixed";
+  parent.style.width = "100%";
+  parent.style.top = 0;
+  parent.style["margin-top"] = s.topMargin;
+  parent.style["z-index"] = 2147483644; /* below hint spans, above iframe */
 
   let grid = document.createElement("div");
 
@@ -125,6 +129,7 @@ th.makeHintGrid = async function() {
   return grid;
 };
 
+/* hintables with associated tab ids */
 th.makeHintables = async function (grid, start = 0) {
     th.numHintables = Math.min(th.maxVisibleCells, th.tabArray.length);
 
@@ -144,7 +149,7 @@ th.makeHintables = async function (grid, start = 0) {
 };
 
 
-/* just to check this works quick fwd/back buttons */
+/* just to check this works with some quick fwd/back buttons */
 th.makePrevNext = function() {
     th.makePrevNext = ()=>{}; /* only want to do this once */
 
@@ -198,15 +203,15 @@ th.makeIframeHtml = async function (iframe, start = 0) {
 
     const blobContent = new Blob([th.iframeHtml], {type: "text/html"});
     th.blobRef = URL.createObjectURL(blobContent);
-      iframe.src = th.blobRef;
-      iframe.sandbox = "";
+    iframe.src = th.blobRef;
+    iframe.sandbox = "";
 
-      let parent = document.createElement("div");
+    let parent = document.createElement("div");
 
-      parent.style.position = "fixed";
-      parent.style.width = "100%";
-      parent.style.height = "100%";
-      parent.style.top = 0;
+    parent.style.position = "fixed";
+    parent.style.width = "100%";
+    parent.style.height = "100%";
+    parent.style.top = 0;
     parent.style["margin-top"] = s.topMargin;
     parent.style["z-index"] = 2147483645;
 
@@ -235,6 +240,7 @@ th.makeTabIframe = async function () {
   return iframe;
 };
 
+/* ideally you wouldn't make everything from scratch every time but this works eh */
 th.cleanup = function() {
     th.hintsParent.remove();
     th.iframeParent.remove();
