@@ -44,6 +44,7 @@ th.settings = {
 const s = th.settings;
 
 /* set some defaults that use computed values */
+
 s.titleFontFamily = s.titleFontFamily || s.computed.getPropertyValue('--tridactyl-cmdl-font-family');
 s.urlFontFamily =  s.urlFontFamily || s.titleFontFamily;
 s.titleFontColour = s.titleFontColour || s.computed.getPropertyValue('--tridactyl-cmdl-fg');
@@ -51,6 +52,61 @@ s.urlFontColour = s.urlFontColour || s.computed.getPropertyValue('--tridactyl-cm
 s.titleFontSize = s.titleFontSize || s.computed.getPropertyValue('--tridactyl-cmdl-font-size');
 s.urlFontSize = s.urlFontSize || s.titleFontSize;
 s.cellBg = s.cellBg || s.computed.getPropertyValue('--tridactyl-cmdl-bg');
+
+
+
+/* creating iframe source this way doesn't upset firefox  */
+/* pieces together html source as a string then makes it into a blob to use as iframe source */
+
+/* as far as I can tell tab titles/urls are all hidden away inside the iframe */
+
+th.makeIframeHtml = async function (iframe, start = 0) {
+    /* https://stackoverflow.com/questions/69591128/chrome-is-forcing-a-white-background-on-frames-only-on-some-websites */
+    /* suggests there should be a way to fix non-transparent bg on sites like github by using the same colour scheme in header */
+
+    /* could presumabely use a blob as css source as well to make styling easier but this just puts everything in a style tag */
+
+    th.iframeHtmlStart = '<!DOCTYPE html><html><head><style> body { margin: auto; } #grid { width: 100%; display: grid; grid-template-columns: repeat('+s.maxCols+', 1fr); grid-gap:'+s.gridGapEm+'em; font-family:'+s.titleFontFamily+'; font-size:'+s.titleFontSize+' } p { overflow: clip; white-space: nowrap; text-overflow: ellipsis; padding: 0; margin: 0; line-height:'+s.lineHeightEm+'; } .title { color: '+s.titleFontColour+'; }.url { color: '+s.urlFontColour+'; font-family: '+s.urlFontFamily+'; font-size:'+s.urlFontSize+' } .icon { width:'+s.iconSizeEm+'em; padding-right: 1em; padding-left: 0.5em; } .tab-parent{ padding:'+s.cellPaddingTopEm+'em 1em '+s.cellPaddingBottomEm+'em 1em; overflow:clip; /* outline: solid 1px orange */; height: '+th.cellHeight+'em; } </style></head><body><div id="grid">';
+
+    /* info from tabs goes between start and end */
+
+    th.iframeHtmlEnd = '</div></body></html>';
+
+    th.iframeHtml = th.iframeHtmlStart;
+
+    for (let i = start; i < Math.min(th.maxVisibleCells, th.tabArray.length); ++i) {
+        let tab = th.tabArray[i];
+        let faviStyle = (th.tabArray[i].favIconUrl === undefined ? ' style="visibility:hidden"' : '');
+        let incogStyle = (th.tabArray[i].incognito === undefined ? ' style="visibility:hidden"' : '');
+
+        /* oh no do you need to sanitise favicon src as well ... that's a lot of text */
+
+        th.iframeHtml += '<div class="tab-parent"><p class="title"><img class="icon favicon" src='+th.makeTextSafe(tab.favIconUrl)+faviStyle+'>'+th.makeTextSafe(tab.title)+'</p><p class="url"><img class="icon incogicon" src='+s.incogIconSrc+incogStyle+'>'+th.makeTextSafe(tab.url)+'</p></div>';
+    }
+
+    const blobContent = new Blob([th.iframeHtml], {type: "text/html"});
+    th.blobRef = URL.createObjectURL(blobContent);
+    iframe.src = th.blobRef;
+    iframe.sandbox = "";
+
+    /* parent div is just to make it easy to centre the iframe on the page */
+    let parent = document.createElement("div");
+
+    parent.style.position = "fixed";
+    parent.style.width = "100%";
+    parent.style.height = "100%";
+    parent.style.top = 0;
+    parent.style["margin-top"] = s.topMargin;
+    parent.style["z-index"] = 2147483645;
+
+    parent.appendChild(iframe);
+    document.documentElement.appendChild(parent);
+
+    th.iframeParent = parent;
+
+    return iframe;
+};
+
 
 /* copied from tridactyl source */
 th.goToTab = async function(tabId) {
@@ -183,48 +239,6 @@ th.makePrevNext = function() {
     th.prev = prev;
     th.next = next;
 }
-
-th.makeIframeHtml = async function (iframe, start = 0) {
-    /* https://stackoverflow.com/questions/69591128/chrome-is-forcing-a-white-background-on-frames-only-on-some-websites */
-    /* suggests there should be a way to fix non-transparent bg on sites like github by using the same colour scheme in header */
-
-    th.iframeHtmlStart = '<!DOCTYPE html><html><head><style> body { margin: auto; } #grid { width: 100%; display: grid; grid-template-columns: repeat('+s.maxCols+', 1fr); grid-gap:'+s.gridGapEm+'em; font-family:'+s.titleFontFamily+'; font-size:'+s.titleFontSize+' } p { overflow: clip; white-space: nowrap; text-overflow: ellipsis; padding: 0; margin: 0; line-height:'+s.lineHeightEm+'; } .title { color: '+s.titleFontColour+'; }.url { color: '+s.urlFontColour+'; font-family: '+s.urlFontFamily+'; font-size:'+s.urlFontSize+' } .icon { width:'+s.iconSizeEm+'em; padding-right: 1em; padding-left: 0.5em; } .tab-parent{ padding:'+s.cellPaddingTopEm+'em 1em '+s.cellPaddingBottomEm+'em 1em; overflow:clip; /* outline: solid 1px orange */; height: '+th.cellHeight+'em; } </style></head><body><div id="grid">';
-
-    th.iframeHtmlEnd = '</div></body></html>';
-
-    th.iframeHtml = th.iframeHtmlStart;
-
-    for (let i = start; i < Math.min(th.maxVisibleCells, th.tabArray.length); ++i) {
-        let tab = th.tabArray[i];
-        let faviStyle = (th.tabArray[i].favIconUrl === undefined ? ' style="visibility:hidden"' : '');
-        let incogStyle = (th.tabArray[i].incognito === undefined ? ' style="visibility:hidden"' : '');
-
-        /* oh no do you need to sanitise favicon src as well ... that's a lot of text */
-
-        th.iframeHtml += '<div class="tab-parent"><p class="title"><img class="icon favicon" src='+th.makeTextSafe(tab.favIconUrl)+faviStyle+'>'+th.makeTextSafe(tab.title)+'</p><p class="url"><img class="icon incogicon" src='+s.incogIconSrc+incogStyle+'>'+th.makeTextSafe(tab.url)+'</p></div>';
-    }
-
-    const blobContent = new Blob([th.iframeHtml], {type: "text/html"});
-    th.blobRef = URL.createObjectURL(blobContent);
-    iframe.src = th.blobRef;
-    iframe.sandbox = "";
-
-    let parent = document.createElement("div");
-
-    parent.style.position = "fixed";
-    parent.style.width = "100%";
-    parent.style.height = "100%";
-    parent.style.top = 0;
-    parent.style["margin-top"] = s.topMargin;
-    parent.style["z-index"] = 2147483645;
-
-    parent.appendChild(iframe);
-    document.documentElement.appendChild(parent);
-
-    th.iframeParent = parent;
-
-    return iframe;
-};
 
 th.makeTabIframe = async function () {
   let iframe = document.createElement("iframe");
