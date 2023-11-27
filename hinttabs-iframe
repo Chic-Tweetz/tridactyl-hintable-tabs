@@ -185,6 +185,9 @@ th.makePrevNext = function() {
 }
 
 th.makeIframeHtml = async function (iframe, start = 0) {
+    /* https://stackoverflow.com/questions/69591128/chrome-is-forcing-a-white-background-on-frames-only-on-some-websites */
+    /* suggests there should be a way to fix non-transparent bg on sites like github by using the same colour scheme in header */
+
     th.iframeHtmlStart = '<!DOCTYPE html><html><head><style> body { margin: auto; } #grid { width: 100%; display: grid; grid-template-columns: repeat('+s.maxCols+', 1fr); grid-gap:'+s.gridGapEm+'em; font-family:'+s.titleFontFamily+'; font-size:'+s.titleFontSize+' } p { overflow: clip; white-space: nowrap; text-overflow: ellipsis; padding: 0; margin: 0; line-height:'+s.lineHeightEm+'; } .title { color: '+s.titleFontColour+'; }.url { color: '+s.urlFontColour+'; font-family: '+s.urlFontFamily+'; font-size:'+s.urlFontSize+' } .icon { width:'+s.iconSizeEm+'em; padding-right: 1em; padding-left: 0.5em; } .tab-parent{ padding:'+s.cellPaddingTopEm+'em 1em '+s.cellPaddingBottomEm+'em 1em; overflow:clip; /* outline: solid 1px orange */; height: '+th.cellHeight+'em; } </style></head><body><div id="grid">';
 
     th.iframeHtmlEnd = '</div></body></html>';
@@ -260,10 +263,6 @@ th.hint = async function(bTabAll = false, start = 0) {
                 th.goToTab(el.tabid);
             }
             else if (el.id === "tri-tabs-next") {
-                console.log("tabs:"+th.tabArrayFull.length);
-                console.log("start:"+start);
-                console.log("num:"+th.numHintables);
-
                 let newStart = (start + th.numHintables < th.tabArrayFull.length ? start + th.numHintables : start);
                 th.hint(bTabAll, newStart)
             }
