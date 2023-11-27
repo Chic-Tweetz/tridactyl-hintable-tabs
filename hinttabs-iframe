@@ -151,8 +151,6 @@ th.makeHintables = async function (grid, start = 0) {
 
 /* just to check this works with some quick fwd/back buttons */
 th.makePrevNext = function() {
-    th.makePrevNext = ()=>{}; /* only want to do this once */
-
     let prev = document.createElement('div');
     prev.className = "tri-tab-hint";
     prev.id = "tri-tabs-prev";
@@ -182,6 +180,9 @@ th.makePrevNext = function() {
 
     document.documentElement.appendChild(prev);
     document.documentElement.appendChild(next);
+    
+    th.prev = prev;
+    th.next = next;
 }
 
 th.makeIframeHtml = async function (iframe, start = 0) {
@@ -244,6 +245,8 @@ th.makeTabIframe = async function () {
 th.cleanup = function() {
     th.hintsParent.remove();
     th.iframeParent.remove();
+    th.prev.remove();
+    th.next.remove();
     URL.revokeObjectURL(th.blobRef);
 };
 
