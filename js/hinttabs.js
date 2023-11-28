@@ -64,7 +64,7 @@ if (tri.hinttabspopup === undefined) {
         }
 
         return lastcell;
-    }
+    };
 
     ht.fillCell = function(tab, cell) {
         let title = cell.querySelector(".tri-tab-title");
@@ -96,7 +96,7 @@ if (tri.hinttabspopup === undefined) {
         url.insertAdjacentText("beforeEnd", tab.url);
 
         return cell;
-    }
+    };
 
 
     ht.maxCellsToFitInScreen = function(grid, cols) {
@@ -106,7 +106,7 @@ if (tri.hinttabspopup === undefined) {
         let maxrows = Math.max(1, Math.floor((window.innerHeight - rect.top) / cellheight));
 
         return cols * maxrows;
-    }
+    };
 
     ht.addCell = function(grid) {
         let cell = document.createElement("div");
@@ -118,7 +118,8 @@ if (tri.hinttabspopup === undefined) {
         title.className = "tri-tab-title";
         url.className = "tri-tab-url";
 
-        title.innerText = "|"; /* want to get some height measured... maybe it should just be set... */
+        /* want to get some height measured... maybe it should just be set... */
+        title.innerText = "|"; 
         url.innerText = "|";
 
         cell.appendChild(title);
@@ -128,8 +129,8 @@ if (tri.hinttabspopup === undefined) {
         let rect = cell.getBoundingClientRect();
 
         return cell;
-    }
-
+    };
+    
     ht.addCells = function(grid, cols) {
         if (grid.childElementCount === 0) {
             ht.addcell(grid);
@@ -141,7 +142,7 @@ if (tri.hinttabspopup === undefined) {
         }
 
         return lastcell;
-    }
+    };
 
     ht.makeTabGrid = function(cols) {
         if (ht.tabgridelem === undefined) {
@@ -160,7 +161,7 @@ if (tri.hinttabspopup === undefined) {
         }
 
         return ht.tabgridelem;
-    }
+    };
 
     ht.addPrevTabs = function(parentElem) {
         if (ht.prevtabs === undefined) {
@@ -173,7 +174,7 @@ if (tri.hinttabspopup === undefined) {
             parentElem.appendChild(prevTabsParent);
             ht.prevtabs = prevTabs;
         }
-    }
+    };
 
     ht.addNextTabs = function(parentElem) {
         if (ht.nexttabs === undefined) {
@@ -181,7 +182,7 @@ if (tri.hinttabspopup === undefined) {
             let nextTabs = document.createElement("div");
             nextTabs.id = "tri-tabs-next";
             nextTabs.className = "tri-tab-grid-more";
-            nextTabs.innerText = "->";
+            nextTabs.innerText = "-->";
             nextTabsParent.appendChild(nextTabs);
             parentElem.appendChild(nextTabsParent);
             ht.nexttabs = nextTabs;
@@ -225,13 +226,10 @@ if (tri.hinttabspopup === undefined) {
         }
 
         return layoutGrid;
-    }
+    };
 
     ht.createLayoutGrid = function() {
         if (ht.tabgridparent === undefined) {
-
-            let shadowHost = document.createElement("div");
-
             ht.tabgridparent = document.createElement("div");
             ht.tabgridparent.id = "tri-tab-grid-parent";
             ht.tabgridparent.style.position = "fixed";
@@ -242,21 +240,25 @@ if (tri.hinttabspopup === undefined) {
 
             ht.tabgridparent.style["grid-template-columns"] = ((100 - ht.widthPercentage) / 2) + "fr " + ht.widthPercentage + "fr " + ((100 - ht.widthPercentage) / 2) + "fr";
 
-            document.documentElement.appendChild(shadowHost);
+            /* using shadow dom seems break it, at least on some sites (eg github), oh well */
+          	
+            let shadowHost = document.createElement("div");
             const shadow = shadowHost.attachShadow({ mode: "open" });
-            shadow.adoptedStyleSheets = [ht.makeShadowStylesheet()];
+            /* shadow.adoptedStyleSheets = [ht.makeShadowStylesheet()]; */
+          
+          	shadow.innerHTML = "<style>"+ ht.styleRulesString +"</style>";
+          
             shadow.appendChild(ht.tabgridparent);
+            document.documentElement.appendChild(shadowHost);
+          
+
+            /* document.adoptedStyleSheets = [ht.makeShadowStylesheet()]; 
+            document.documentElement.appendChild(ht.tabgridparent); */
         }
 
         ht.tabgridparent.style.display = "grid";
         return ht.tabgridparent;
-    }
-
-    ht.makeShadowStylesheet = function(rulesArr) {
-        ht.stylesheet = new CSSStyleSheet();
-        ht.stylesheet.replaceSync(ht.styleRulesString);
-        return ht.stylesheet;
-    }
+    };
 
     /* make a grid of tabs and hint them */
     ht.hint = async function(bTabAll = false, start = 0) {
@@ -278,4 +280,4 @@ if (tri.hinttabspopup === undefined) {
     };
 }
 
-tri.hinttabspopup.hint();
+tri.hinttabspopup.hint(!0);
