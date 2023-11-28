@@ -83,10 +83,14 @@ if (tri.hinttabspopup === undefined) {
             title.appendChild(incogicon);
                 
             let favicon = document.createElement("img");
-            favicon.src = tab.favIconUrl;
+            
             if (tab.favIconUrl === undefined) {
                 favicon.style.visibility = "hidden";
             }
+            else {
+                favicon.src = tab.favIconUrl;
+            }
+            
             url.appendChild(favicon);
         }
 
