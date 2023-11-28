@@ -1,3 +1,5 @@
+// Blob source is still visible to the page, d'oh
+
 // This one uses a blob as the source of the iframe and requires no js or messaging in the iframe doc
 // because this creates a string for the html source, the data from the tabs (title, url, favIconUrl)
 // can cause issues if they have html tags etc
