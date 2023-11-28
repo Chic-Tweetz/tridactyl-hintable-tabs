@@ -75,22 +75,19 @@ if (tri.hinttabspopup === undefined) {
 
         /* favicons and private browsing icons */
         if (ht.bFavicons) {
-            if (tab.incognito) {
-                let incogicon = document.createElement("img");
-                incogicon.src = "chrome://global/skin/icons/indicator-private-browsing.svg";
-                title.appendChild(incogicon);
+            let incogicon = document.createElement("img");
+            incogicon.src = "chrome://global/skin/icons/indicator-private-browsing.svg";
+            if (!tab.incognito) {
+                incogicon.style.visibility = "hidden";
             }
-            else {
-                title.style["padding-left"] = 2 * ht.iconSize + "em";
+            title.appendChild(incogicon);
+                
+            let favicon = document.createElement("img");
+            favicon.src = tab.favIconUrl;
+            if (tab.favIconUrl === undefined) {
+                favicon.style.visibility = "hidden";
             }
-            if (tab.favIconUrl !== undefined) {
-                let favicon = document.createElement("img");
-                favicon.src = tab.favIconUrl;
-                url.appendChild(favicon);
-            }
-            else {
-                url.style["padding-left"] = 2 * ht.iconSize + "em";
-            }
+            url.appendChild(favicon);
         }
 
         cell.tabid = tab.id;
