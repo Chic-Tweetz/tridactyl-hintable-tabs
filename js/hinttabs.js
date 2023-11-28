@@ -130,9 +130,7 @@ if (tri.hinttabspopup === undefined) {
         cell.appendChild(title);
         cell.appendChild(document.createElement("br"));
         cell.appendChild(url);
-
-        let rect = cell.getBoundingClientRect();
-
+        
         return cell;
     };
     
