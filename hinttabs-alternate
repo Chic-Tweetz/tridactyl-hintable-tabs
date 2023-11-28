@@ -17,31 +17,32 @@ if (tri.hinttabspopup === undefined) {
     ht.iconSize = 1; /* em - moves text vertically if not 1em */
 
     /* these are some selectors for elements created for the tab grid - could be added to custom tridactyl theme */
-    ht.stylerules = [
-        "#tri-tab-grid-parent { background: rgba(30,30,30,0.25) !important; outline: solid rgba(30,30,30,0.25)  5px; filter: drop-shadow(0 0 10rem #3a0080); }",
-        "#tri-tab-grid { height: fit-content; font-family: var(--tridactyl-cmdl-font-family); color: var(--tridactyl-cmdl-fg); font-size: var(--tridactyl-cmdl-font-size); filter: drop-shadow(0 0 0.2rem grey); }",
 
-        "#tri-tab-grid>div { padding: 0.5em; overflow: clip; text-overflow: ellipsis; white-space: nowrap; text-align: left; background-color: #101216 !important; padding-left: 1.5em; padding-right: 1.5em; } ",
+  ht.styleRulesString = "#tri-tab-grid-parent { background: rgba(30,30,30,0.25) !important; outline: solid rgba(30,30,30,0.25)  5px; filter: drop-shadow(0 0 10rem #3a0080); }" +
+        "#tri-tab-grid { height: fit-content; font-family: var(--tridactyl-cmdl-font-family); color: var(--tridactyl-cmdl-fg); font-size: var(--tridactyl-cmdl-font-size); filter: drop-shadow(0 0 0.2rem grey); }" +
 
-        "#tri-tab-grid>div>p { display: inline; } ",
+        "#tri-tab-grid>div { padding: 0.5em; overflow: clip; text-overflow: ellipsis; white-space: nowrap; text-align: left; background-color: #101216 !important; padding-left: 1.5em; padding-right: 1.5em; } " +
 
-        "#tri-tab-grid>div>p.tri-tab-title { color: #e4e4e4 !important; }",
+        "#tri-tab-grid>div>p { display: inline; } " +
 
-        "#tri-tab-grid>div>p.tri-tab-url { color: slateblue !important; } ",
+        "#tri-tab-grid>div>p.tri-tab-title { color: #e4e4e4 !important; }" +
 
-        "#tri-tab-grid>div>p>img { padding: 0 1em 0 0; display: inline-block; vertical-align: middle; height:" + ht.iconSize + "em; }",
+        "#tri-tab-grid>div>p.tri-tab-url { color: slateblue !important; } " +
 
-        "#tri-tab-grid>div.TridactylHintActive { background-color: #202020 !important; } ",
+        "#tri-tab-grid>div>p>img { padding: 0 1em 0 0; display: inline-block; vertical-align: middle; height:" + ht.iconSize + "em; }" +
 
-        "#tri-tab-grid>div.TridactylHintActive>p {  } ",
+        "#tri-tab-grid>div.TridactylHintActive { background-color: #202020 !important; } " +
 
-        "#tri-tab-grid>div.TridactylHintActive>p.tri-tab-title { color: white !important; }",
+        "#tri-tab-grid>div.TridactylHintActive>p {  } " +
 
-        "#tri-tab-grid>div.TridactylHintActive>p.tri-tab-url { color: yellow !important; } ",
+        "#tri-tab-grid>div.TridactylHintActive>p.tri-tab-title { color: white !important; }" +
 
-        "#tri-tab-grid>div>p>img {  }",
+        "#tri-tab-grid>div.TridactylHintActive>p.tri-tab-url { color: yellow !important; } " +
 
-        ".tri-tab-grid-more { margin-left:" + ht.gridGap + "px; margin-right:" + ht.gridGap + "px; height:100%; background-color: #101216 !important; display: flex; align-items: center; justify-content: center; color: #e4e4e4 !important; } " ];
+        "#tri-tab-grid>div>p>img {  }" +
+
+        ".tri-tab-grid-more { margin-left:" + ht.gridGap + "px; margin-right:" + ht.gridGap + "px; height:100%; background-color: #101216 !important; display: flex; align-items: center; justify-content: center; color: #e4e4e4 !important; } ";
+
     /* I don't know where this lives in tridactyl but it's there somewhere */
     /* just need the tab number for this */
     ht.goToTab = async function(tabId) {
@@ -150,7 +151,7 @@ if (tri.hinttabspopup === undefined) {
             ht.tabgridelem = document.createElement("div");
             ht.tabgridelem.setAttribute("style", "grid-template-columns: repeat("+cols+", minmax(0, 1fr));");
             ht.tabgridelem.style.display = "grid";
-              ht.tabgridelem.style["grid-gap"] = ht.gridGap + "px";
+            ht.tabgridelem.style["grid-gap"] = ht.gridGap + "px";
             ht.tabgridelem.id = "tri-tab-grid";
             ht.tabgridelem.numcols = cols; /* just store this info in there why not */
             ht.addCell(ht.tabgridelem); /* make one so we can see how big they'll be */
@@ -167,13 +168,13 @@ if (tri.hinttabspopup === undefined) {
     ht.addPrevTabs = function(parentElem) {
         if (ht.prevtabs === undefined) {
             let prevTabsParent = document.createElement("div"); /* does this need to be here? */
-              let prevTabs = document.createElement("div");
-              prevTabs.id = "tri-tabs-prev";
-              prevTabs.className = "tri-tab-grid-more";
-              prevTabs.innerText = "<--";
-              prevTabsParent.appendChild(prevTabs);
-              parentElem.appendChild(prevTabsParent);
-              ht.prevtabs = prevTabs;
+            let prevTabs = document.createElement("div");
+            prevTabs.id = "tri-tabs-prev";
+            prevTabs.className = "tri-tab-grid-more";
+            prevTabs.innerText = "<--";
+            prevTabsParent.appendChild(prevTabs);
+            parentElem.appendChild(prevTabsParent);
+            ht.prevtabs = prevTabs;
         }
     }
 
@@ -193,13 +194,6 @@ if (tri.hinttabspopup === undefined) {
     ht.createOrShowGrid = async function(bTabAll, start = 0) {
         let alltabs = await tri.browserBg.tabs.query(bTabAll ? {} : {currentWindow:true});
         let tabs = alltabs.slice(start, start + (ht.maxRows * ht.maxCols));
-
-        if (ht.stylesheet === undefined) {
-            ht.stylesheet = ht.addStylesheet(ht.stylerules);
-        }
-        else {
-            ht.stylesheet.disabled = false;
-        }
 
         let layoutGrid = ht.createLayoutGrid();
 
@@ -230,7 +224,7 @@ if (tri.hinttabspopup === undefined) {
             ht.prevtabs.onclick = () => ht.hint(bTabAll, Math.max(0, start - maxCells));
         }
         else {
-             ht.prevtabs.style.display = "none";
+            ht.prevtabs.style.display = "none";
         }
 
         return layoutGrid;
@@ -238,29 +232,34 @@ if (tri.hinttabspopup === undefined) {
 
     ht.createLayoutGrid = function() {
         if (ht.tabgridparent === undefined) {
+
+            let shadowHost = document.createElement("div");
+
             ht.tabgridparent = document.createElement("div");
             ht.tabgridparent.id = "tri-tab-grid-parent";
-            ht.tabgridparent.style.position = "fixed"; /* consider absolute and let it scroll with hint tags */
-            ht.tabgridparent.style.top = ht.topOffset + "rem"; /* if absolute, add vertical scroll... and use px ... and add horizontal scroll to left */
+            ht.tabgridparent.style.position = "fixed";
+            ht.tabgridparent.style.top = ht.topOffset + "rem";
             ht.tabgridparent.style.width = "100%";
             ht.tabgridparent.style.height = "fit-content";
-            ht.tabgridparent.style["z-index"] = 2147483645; /* just below hint tags */
+            ht.tabgridparent.style["z-index"] = 2147483645;
 
             ht.tabgridparent.style["grid-template-columns"] = ((100 - ht.widthPercentage) / 2) + "fr " + ht.widthPercentage + "fr " + ((100 - ht.widthPercentage) / 2) + "fr";
 
-            document.body.parentElement.appendChild(ht.tabgridparent);
+            document.documentElement.appendChild(shadowHost);
+            const shadow = shadowHost.attachShadow({ mode: "open" });
+            shadow.adoptedStyleSheets = [ht.makeShadowStylesheet()];
+            shadow.appendChild(ht.tabgridparent);
         }
 
         ht.tabgridparent.style.display = "grid";
         return ht.tabgridparent;
     }
 
-    ht.addStylesheet = function(rulesArr) {
-        let stylesheet = document.createElement("style");
-        document.head.appendChild(stylesheet);
-        rulesArr.forEach((rule) => stylesheet.sheet.insertRule(rule));
-        return stylesheet;
-    };
+    ht.makeShadowStylesheet = function(rulesArr) {
+        ht.stylesheet = new CSSStyleSheet();
+        ht.stylesheet.replaceSync(ht.styleRulesString);
+        return ht.stylesheet;
+    }
 
     /* make a grid of tabs and hint them */
     ht.hint = async function(bTabAll = false, start = 0) {
@@ -281,4 +280,5 @@ if (tri.hinttabspopup === undefined) {
         });
     };
 }
+
 tri.hinttabspopup.hint();
