@@ -85,6 +85,7 @@ if (tri.hinttabspopup === undefined) {
             let favicon = document.createElement("img");
             
             if (tab.favIconUrl === undefined) {
+                favicon.src = incogicon.src;
                 favicon.style.visibility = "hidden";
             }
             else {
