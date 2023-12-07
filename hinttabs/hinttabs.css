@@ -1,0 +1,167 @@
+:root, html, body, #shadow, #tabsiframe {
+	/* put it in a shadow dom and this will all be fine :) */
+	/* everything in em so we can work out where els are positioned */
+	font-size: 9pt;
+    
+    font-family: "Hack", "SF Mono", monospace;
+    color: white; 
+    
+    /* these affect the placement of the grid items */
+    --tri-tabs-title-font-size: 1em;
+    --tri-tabs-url-font-size: 1em;
+
+    --tri-tabs-line-height: 1.4em;
+    --tri-tabs-grid-gap: 0.4em;
+
+    --tri-tabs-padding-top: 0.5em;
+	--tri-tabs-padding-bottom: 0.5em;
+	
+	--tri-tabs-icon-size: 1em;
+
+	/* this is daft, yes? It does work though */
+	--tri-tabs-tab-height: 	calc( max( var(--tri-tabs-line-height), var(--tri-tabs-title-font-size), var(--tri-tabs-icon-size) ) + max( var(--tri-tabs-line-height), var(--tri-tabs-url-font-size), var(--tri-tabs-icon-size) ) );
+    --tri-tabs-tab-padded: 	calc(var(--tri-tabs-tab-height) + var(--tri-tabs-padding-top) + var(--tri-tabs-padding-bottom));
+    --tri-tabs-tab-spacing: calc(var(--tri-tabs-tab-padded) + var(--tri-tabs-grid-gap));
+
+    /* vars for max columns and min width from this page: */
+    /* https://css-tricks.com/an-auto-filling-css-grid-with-max-columns/ */
+    --grid-column-count: 4;
+    --grid-item--min-width: 400px;
+
+  /**
+   * Calculated values.
+   */
+  --gap-count: calc(var(--grid-column-count) - 1);
+  --total-gap-width: calc(var(--gap-count) * var(--tri-tabs-grid-gap));
+  --grid-item--max-width: calc((100% - var(--total-gap-width)) / var(--grid-column-count));
+    
+}
+
+body {
+    /* transparency might not work everywhere */
+    background-color: rgba(16, 18, 22, 0);
+    margin: 0;
+    padding: 0;
+}
+
+.outermost {
+	top: 3em;
+	position: fixed;
+	width: 100%;
+	height: 100%;
+}
+
+.gridalign {
+	width: 80%;
+/* 	height: 100%; */
+	margin: auto;
+}
+
+#tabsiframe {
+	width: 100%;
+	height: 100%;
+	border: none;
+}
+
+#dimmer {
+	top: 0;
+	position: fixed;
+	width: 100%;
+	height: 100%;
+	background: rgba(31, 7, 47, 0.5);
+}
+
+#tabs {
+    /* no effect but easy access to px value of tab spacing in js */
+    background-size: var(--tri-tabs-tab-spacing);
+    
+    display: grid;
+    
+    /* https://css-tricks.com/an-auto-filling-css-grid-with-max-columns/ */
+    grid-template-columns: repeat(auto-fill, minmax(max(var(--grid-item--min-width), var(--grid-item--max-width)), 1fr));
+    grid-gap: var(--tri-tabs-grid-gap);
+
+    width: 100%;
+    overflow: clip;
+    margin: auto;
+    
+    
+}
+
+#ctrls {
+	top: calc(3em - calc( var(--tri-tabs-tab-height) / 2 ) - var(--tri-tabs-grid-gap));
+	display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr;
+    grid-gap: var(--tri-tabs-grid-gap);
+	position: fixed;
+	text-align: center;
+}
+
+.tab, .ctrl {
+    outline: solid 1px slateblue;
+    outline-offset: -1px;
+    background: rgb(16, 18, 22);
+   
+    line-height: var(--tri-tabs-line-height);
+    overflow: clip;
+}
+
+.tab {
+    height: var(--tri-tabs-tab-height); 
+    padding: var(--tri-tabs-padding-top) 1em var(--tri-tabs-padding-bottom) 0.5em;
+}
+
+.ctrl {
+    height: calc( var(--tri-tabs-tab-height) / 2 );
+	
+	/* top, right, bottom, left */
+    padding: var(--tri-tabs-padding-top) 1.5em var(--tri-tabs-padding-bottom) 1.5em;
+}
+
+
+/* potentially message the iframe with currently selected hint to get styling over there */
+.TridactylHintActive {
+	background: rgb(32, 36, 44);
+}
+
+.TridactylHintActive>.text>.title, .TridactylHintActive {
+	color: white;
+}
+
+.TridactylHintActive>.text>.url {
+	color: yellow;
+}
+
+.icons {
+    float:left;
+    padding-right: 1em;
+    padding-left: 1em;
+    height: 100%;
+}
+
+.text {
+    display:block;
+    align-content: center;
+    white-space: nowrap;
+    overflow: clip; 
+    text-overflow: ellipsis;
+    color: rgb(240,240,240);
+}
+
+p {
+    display:inline;
+}
+
+.title {
+	font-size: var(--tri-tabs-title-font-size);
+}
+
+.url {
+	font-size: var(--tri-tabs-url-font-size);
+    color: slateblue;
+}
+
+img {
+    width: var(--tri-tabs-icon-size);
+    display:inline;
+}
