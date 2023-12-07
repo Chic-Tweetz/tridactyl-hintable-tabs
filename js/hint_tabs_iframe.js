@@ -1,5 +1,8 @@
+// send tab info to iframe with localhost source
+// create matching hints to switch to selected tab
+
 if (tri.tabsiframe !== undefined) {
-	  tri.tabsiframe.showAndHint();
+	tri.tabsiframe.showAndHint();
 } else {
     tri.tabsiframe = {};
 
@@ -19,7 +22,7 @@ if (tri.tabsiframe !== undefined) {
     async function getServerRoot() {
         if (ti.serverRoot === undefined) {
             let port = tri.config.get("serverport") || await tri.excmds.composite("serverstart");
-            ti.serverRoot = "http://localhost:" + port + "/hinttabiframes/";
+            ti.serverRoot = "http://localhost:" + port + "/hinttabs/";
         }
         return ti.serverRoot;
     };
@@ -75,8 +78,8 @@ if (tri.tabsiframe !== undefined) {
     // big old block of loading divs up (used to be split up but became a big blob while fixing stuff)
     async function loadElements(bTabAll = true) {
         const svrroot = await getServerRoot();
-        const csssrc = svrroot + "tabiframes.css";
-        const iframesrc = svrroot + "tabiframes.html";
+        const csssrc = svrroot + "hinttabs.css";
+        const iframesrc = svrroot + "index.html";
 
         ti.tabslist = await tri.browserBg.tabs.query(bTabAll ? {} : {currentWindow:true});
 
