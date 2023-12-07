@@ -1,3 +1,5 @@
+[js script to run through tridactyl](https://github.com/Chic-Tweetz/tridactyl-stuff/blob/main/js/hint_tabs_iframe.js)
+
 make these files available through localhost, in a subdirectory named "hinttabs"
 
 the iframe source is "http://localhost:PORT/hinttabs/index.html"
