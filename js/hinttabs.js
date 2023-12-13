@@ -1,6 +1,6 @@
 /* create list of tabs in a grid then hint them */
-/* in shadow dom, so styling is all from ti.css declared near the top */
-var bAllWindows = true;
+/* in shadow dom, so styling is all from ti.css */
+let bAllWindows = true;
 
 if (tri.hinttabs !== undefined) {
     tri.hinttabs.showAndHint(bAllWindows);
@@ -356,9 +356,7 @@ if (tri.hinttabs !== undefined) {
             frag.appendChild(ti.tabTemplate.content.cloneNode(true));
             
             const hint = frag.lastChild;
-            
-            console.log(hint);
-            
+
             tabInfoIntoCell(hint, ti.tabs[i+ti.firstTab]);
             hint.index = i;
             
@@ -429,7 +427,7 @@ if (tri.hinttabs !== undefined) {
     };
 
     ti.hint = function() {
-        tri.excmds.hint("-c", ".TridactylTabHint").then(function(t) {
+        return tri.excmds.hint("-c", ".TridactylTabHint").then(function(t) {
             if (t === "") {
                 ti.hide();
             } else if (t.tabid !== undefined) {
