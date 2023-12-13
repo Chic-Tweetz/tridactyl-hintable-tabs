@@ -1,6 +1,7 @@
 /* create list of tabs in a grid then hint them */
-/* in shadow dom, so styling is all from ti.css */
-let bAllWindows = true;
+/* in shadow dom, so styling is all from ti.css declared near the top */
+var bAllWindows = true;
+
 if (tri.hinttabs !== undefined) {
     tri.hinttabs.showAndHint(bAllWindows);
 } else {
@@ -327,8 +328,9 @@ if (tri.hinttabs !== undefined) {
     };
     
     /* take icons, titles and urls to pop in divs */
-    function tabInfoIntoCell(cell, tab) {
+    function tabInfoIntoCell(cell, tab) {        
         let favicon = cell.querySelector(".favicon");
+
         if (tab.favIconUrl !== undefined) {
             favicon.src = tab.favIconUrl;
             favicon.style.visibility = "inherit";
@@ -337,7 +339,8 @@ if (tri.hinttabs !== undefined) {
             favicon.style.visibility = "hidden";
         }
         
-        cell.querySelector(".TridactylTabHint").tabid = tab.id;
+        cell.tabid = tab.id;
+        
         cell.querySelector(".incogicon").style.visibility = (tab.incognito ? "inherit" : "hidden");
         cell.querySelector(".title").textContent = tab.title;
         cell.querySelector(".url").textContent = tab.url;
@@ -350,10 +353,15 @@ if (tri.hinttabs !== undefined) {
         let frag = document.createDocumentFragment();
 
         for (let i = 0; i < ti.hintCount; ++i) {
-            const hint = ti.tabTemplate.content.cloneNode(true);
+            frag.appendChild(ti.tabTemplate.content.cloneNode(true));
+            
+            const hint = frag.lastChild;
+            
+            console.log(hint);
+            
             tabInfoIntoCell(hint, ti.tabs[i+ti.firstTab]);
             hint.index = i;
-            frag.appendChild(hint);
+            
         }
 
         ti.hintGrid.replaceChildren(...frag.children);
