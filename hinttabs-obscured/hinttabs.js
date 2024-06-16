@@ -1,4 +1,5 @@
 command hinttabs js -dΩ
+/* :hinttabs -a to show tabs from all windows */
 if (tri.hinttabs) {
 	tri.hinttabs.showAndHint(JS_ARGS[1] === "-a");
 } else {
