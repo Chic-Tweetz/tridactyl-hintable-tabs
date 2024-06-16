@@ -401,7 +401,7 @@ ${customtheme}
 	        tabGrid.maxCells = Math.min(numTabs, maxTabs, tabGrid.maxVisibleCells);
 	    };
 	        
-	    tabGrid.tabsToGrid = async (bTabAll=true) => {
+	    tabGrid.tabsToGrid = async (bTabAll=false) => {
 	                
 	        const thiswin = (await tri.browserBg.windows.getCurrent()).id;
 	    
