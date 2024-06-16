@@ -512,7 +512,7 @@ ${customtheme}
 	        }});
 	    };
 	    
-	    h.showAndHint = async (bAllTabs = true) => {
+	    h.showAndHint = async (bAllTabs = false) => {
 	        h.iframe.style.display = "revert";
 	        await tabGrid.tabsToGrid();
 	        h.hint();
