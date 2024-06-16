@@ -514,7 +514,7 @@ ${customtheme}
 	    
 	    h.showAndHint = async (bAllTabs = false) => {
 	        h.iframe.style.display = "revert";
-	        await tabGrid.tabsToGrid();
+	        await tabGrid.tabsToGrid(bAllTabs);
 	        h.hint();
 	    };
 	    
