@@ -56,14 +56,14 @@ if (tri.hinttabs) {
     --tritab-max-cols: 4;
     --tritab-col-min-width: 400px;
     
-    --tritab-fg: var(--tridactyl-cmplt-fg);
-    --tritab-bg: var(--tridactyl-cmplt-bg);
+    --tritab-fg: var(--tridactyl-cmdl-fg);
+    --tritab-bg: var(--tridactyl-cmdl-bg);
     
     --tritab-url-fg: var(--tridactyl-url-fg);
     --tritab-url-bg: none;
     --tritab-url-decoration: var(--tridactyl-url-text-decoration);
     
-    --tritab-outline-color: var(--tridactyl-cmplt-fg);
+    --tritab-outline-color: var(--tridactyl-cmdl-fg);
     --tritab-incognito-outline-color: #8000d7;
     
     --tritab-faketab-outline: dimgrey;
