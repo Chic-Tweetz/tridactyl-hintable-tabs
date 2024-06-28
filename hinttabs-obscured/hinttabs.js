@@ -1,31 +1,31 @@
 command hinttabs js -dΩ
 /* :hinttabs -a to show tabs from all windows */
 if (tri.hinttabs) {
-	tri.hinttabs.showAndHint(JS_ARGS[1] === "-a");
+    tri.hinttabs.showAndHint(JS_ARGS[1] === "-a");
 } else {
-	tri.hinttabs = {};
-	const h = tri.hinttabs;
+    tri.hinttabs = {};
+    const h = tri.hinttabs;
 
-	const cmdln = document.getElementById("cmdline_iframe");
-	const cmdwin = cmdln.contentWindow;
-	const cmddoc = cmdln.contentDocument;
-	
-	const staticDir = cmdwin.origin + "/static/";
-	
-	const theme = tri.config.get("theme");
-	let customtheme = tri.config.get("customthemes")[theme] || "";
-	const builtintheme = (customtheme === "" ?
-		`<link rel="stylesheet" href="${staticDir+"themes/"+theme+"/"+theme+".css"}">` : "");
-	
-	/* so much css in the blob <head>! */
-	/*
-	it is possible to reuse a blob across tabs (of the same container), but most of the important stuff is done in onload
-	and adding javascript to the iframe source might not be possible (haven't found a way anyway - csp)
-	so not sure if retrieving the same blob (eg through tri.state) would be useful (apart from being kinda neat)
-	*/
-	/* long string containing css and html for the blob / iframe source */
-	const blob = new cmdwin.Blob([
-`<!DOCTYPE html>
+    const cmdln = document.getElementById("cmdline_iframe");
+    const cmdwin = cmdln.contentWindow;
+    const cmddoc = cmdln.contentDocument;
+
+    const staticDir = cmdwin.origin + "/static/";
+
+    const theme = tri.config.get("theme");
+    let customtheme = tri.config.get("customthemes")[theme] || "";
+    const builtintheme = (customtheme === "" ?
+        `<link rel="stylesheet" href="${staticDir+"themes/"+theme+"/"+theme+".css"}">` : "");
+
+    /* so much css in the blob <head>! */
+    /*
+    it is possible to reuse a blob across tabs (of the same container), but most of the important stuff is done in onload
+    and adding javascript to the iframe source might not be possible (haven't found a way anyway - csp)
+    so not sure if retrieving the same blob (eg through tri.state) would be useful (apart from being kinda neat)
+    */
+    /* long string containing css and html for the blob / iframe source */
+    const blob = new cmdwin.Blob([
+        `<!DOCTYPE html>
 <html>
 <head>
 	<meta charset="utf-8">
@@ -323,202 +323,242 @@ ${customtheme}
 	</div>
 </div>
 </body>
-</html>`], { type: "text/html" });
+</html>`
+    ], {
+        type: "text/html"
+    });
 
-	/* create the blob url through the cmdline iframe's window to get a "blob:moz-extension://..." URL */
-	const blurl = cmdwin.URL.createObjectURL(blob);
-	
-	/* pretty sure this happens automatically anyway */
-	addEventListener("unload", ()=>URL.revokeObjectURL(blurl));
-	
-	/* make the iframe, give it the blob src, have it fill the screen and ignore the mouse */
-	h.iframe = cmddoc.createElement("iframe");
-	h.iframe.src = blurl;
-	h.iframe.style.position = "fixed";
-	h.iframe.style.top = 0;
-	h.iframe.style.left = 0;
-	h.iframe.style.width = "100%";
-	h.iframe.style.height = "100%";
-	h.iframe.style["z-index"] = 2147483646;
-	h.iframe.style.border = "none";
-	h.iframe.scrolling = "no";
-	h.iframe.style["pointer-events"] = "none";
-	h.iframe.style.display = "none";
-	
-	document.documentElement.appendChild(h.iframe);
-	
-	/* can't put javascript in the iframe source so add everything once it's loaded */
-	h.iframe.onload = () => {
-	    const w = h.iframe.contentWindow;
-	    const d = h.iframe.contentDocument;
-	
-	    const tabGrid = {
-	        el: d.getElementById("tabs"),
-	        first: 0,
-	        rangeStyle: d.createElement("style"),
-	    };
-	    
-	    /* let tab grid be accessed through the iframe's content window (for testing mainly) */
-	    w.newTabGrid = tabGrid;
-	    
-	    /* rangeStyle sets which grid cells are visible */
-	    d.head.appendChild(tabGrid.rangeStyle);
-	    
-	    tabGrid.setRange = (from,to)=>tabGrid.rangeStyle.textContent=`.TridactylTab:nth-child(-n+${from}), .TridactylTab:nth-child(n+${to+1}) { display:none; }`;
-	
-	    tabGrid.next = () => {
-	        if (tabGrid.first + tabGrid.maxVisibleCells < tabGrid.el.children.length) {
-	            tabGrid.first = Math.min(tabGrid.el.children.length-1,tabGrid.first+tabGrid.maxVisibleCells);
-	            tabGrid.setRange(tabGrid.first, tabGrid.first + tabGrid.maxCells);
-	        }
-	    };
-	    
-	    tabGrid.prev = () => {
-	        tabGrid.first = Math.max(0, tabGrid.first - tabGrid.maxVisibleCells);
-	        tabGrid.setRange(tabGrid.first, tabGrid.first + tabGrid.maxCells);
-	    };
-	
-	    tabGrid.ctrlCallbacks = {
-	        prev: ()=>{ tabGrid.prev(); return h.hint(); },
-			next: ()=>{ tabGrid.next(); return h.hint(); },
-			close: ()=>{ return tri.excmds.tabclose(); },
-			newtab: ()=>{ h.hide(); return tri.excmds.tabopen(); },
-			search: ()=>{ h.hide(); return tri.excmds.fillcmdline("taball"); },
-	    };
-	
-		/* calculate how many tab cells can fit completely within the screen */
-	    tabGrid.calcMaxCells = (numTabs)=>{
-	        const compStyle = getComputedStyle(tabGrid.el);
-	        
-	        let gridTop = tabGrid.el.getBoundingClientRect().top;
-	    	let cellHeightPx = parseFloat(compStyle.backgroundSize);
-	        
-	        let maxRows = Math.max(1, Math.floor((innerHeight - gridTop) / cellHeightPx));
-	        let numCols = compStyle.gridTemplateColumns.split(" ").length;
-	        let maxTabs = compStyle.getPropertyValue("--tritab-max-tabs");
-	        
-	        tabGrid.maxVisibleCells = Math.min(numCols * maxRows, maxTabs);
-	        tabGrid.maxCells = Math.min(numTabs, maxTabs, tabGrid.maxVisibleCells);
-	    };
-	        
-	    tabGrid.tabsToGrid = async (bTabAll=false) => {
-	                
-	        const thiswin = (await tri.browserBg.windows.getCurrent()).id;
-	    
-	        let containers = (await tri.browserBg.contextualIdentities.query({})).reduce((acc, cur) => {
-			    acc[cur.cookieStoreId] = cur; return acc;
-			}, {});
-			
-	        let tabs = await tri.browserBg.tabs.query(bTabAll ? {} : {currentWindow:true});
-	           
-	        let frag = d.createDocumentFragment();
-	
-	        let windexes = {};
-	
-	        let mostRecentAccessed = 0;
-	        let secondMost = 0;
-	        let currTab = 0;
-	        let prevTab = -1;
-	
-	        let winnum = 0;
-	
-	        tabs.every((tab, i) => {
-	            let cell = d.getElementById("tabTemplate").content.cloneNode(true);
-	            
-	            if (!windexes[tab.windowId]) windexes[tab.windowId] = ++winnum;
-	            
-	            /* this was slightly more complex than I thought and is now ugly. */
-	            if (tab.windowId === thiswin) {
-	            	if (tab.lastAccessed > mostRecentAccessed) {
-	            		secondMost = mostRecentAccessed;
-	            		mostRecentAccessed = tab.lastAccessed;
-	            		prevTab = currTab;
-	            		currTab = i;
-	            	} else if (t.lastAccessed > secondMost) {
-	            		secondMost = tab.lastAccessed;
-	            		prevTab = i;
-	            	}
-	            }
-	            
-	            if (tab.favIconUrl !== undefined) cell.querySelector(".favicon").src = tab.favIconUrl;
-	            else cell.querySelector(".favicon").style.visibility = "hidden";
-	            
-	            let prefix = "";
-	            if (tab.pinned) prefix += "P";
-	            if (tab.audible) prefix += "A";
-	            if (tab.mutedInfo.muted) prefix += "M";
-	            if (tab.discarded) prefix += "D";
-	            
-	            cell.querySelector(".prefix").textContent = prefix;
-	            cell.querySelector(".title").textContent = tab.title;
-	            cell.querySelector(".url").textContent = tab.url;
-	            cell.querySelector(".wintabindex").textContent = (bTabAll ? windexes[tab.windowId] + "." : "") + (tab.index + 1);
-	
-	            if (tab.incognito) {
-	            	cell.querySelector(".container").setAttribute("style", `background-image: url("chrome://global/skin/icons/indicator-private-browsing.svg")`);
-	            	cell.querySelector(".TridactylTab").setAttribute("style", "--tritab-outline-color: var(--tritab-incognito-outline-color);");
-	            	
-	            } else if (tab.cookieStoreId !== "firefox-default") {
-	            	cell.querySelector(".container").setAttribute("style", `mask-image:url("${containers[tab.cookieStoreId].iconUrl}"); background-color: ${containers[tab.cookieStoreId].colorCode};`);
-	            	
-	            	cell.querySelector(".TridactylTab").setAttribute("style", `--tritab-outline-color: ${containers[tab.cookieStoreId].colorCode};`);
-	            }
-	            
-	            cell.querySelector(".TridactylTab").setAttribute("tabid", tab.id);
-	            
-	
-	            frag.appendChild(cell);
-	            
-	            return true;
-	        });
-	   
-	        frag.children[currTab].querySelector(".prefix").textContent = "%" + frag.children[currTab].querySelector(".prefix").textContent;
-	        if (prevTab > -1) { frag.children[prevTab].querySelector(".prefix").textContent = "#" + frag.children[prevTab].querySelector(".prefix").textContent; }
-	
-	        
-	        tabGrid.calcMaxCells(tabs.length);
-	        tabGrid.setRange(0,tabGrid.maxVisibleCells);
-	        
-	        if (tabs.length > tabGrid.maxVisibleCells) {
-	            for (let i = 0; i < tabGrid.maxVisibleCells - tabs.length % tabGrid.maxVisibleCells; ++i) {
-	                frag.appendChild(d.getElementById("fakeTabTemplate").content.cloneNode(true));
-	            }
-	        }
-	        
-	        tabGrid.el.replaceChildren(frag);
-	        
-	    };
-	    
-	    h.hide = () => {
-	        h.iframe.style.display = "none";
-	        tabGrid.el.replaceChildren();
-	    };
-	    
-	    h.hint = async () => {
-	        tri.hinting_content.hintElements(Array.from(tabGrid.el.children).concat(Array.from(d.getElementById("ctrls").children)), { callback: (t)=>{
-	            if (!t) { h.hide(); return; }
-	            
-	            const id = t.getAttribute("tabid");
-	            
-	            if (id) {
-	                if (id === "fake") {
-						return h.hint();
-	                } else {
-	                    h.hide(); return tri.webext.goToTab(Number(id));
-	                }
-	            } else {
-	                return tabGrid.ctrlCallbacks[t.id]();
-	            }
-	        }});
-	    };
-	    
-	    h.showAndHint = async (bAllTabs = false) => {
-	        h.iframe.style.display = "revert";
-	        await tabGrid.tabsToGrid(bAllTabs);
-	        h.hint();
-	    };
-	    
-	    h.showAndHint(JS_ARGS[1] === "-a");
-	};
+    /* create the blob url through the cmdline iframe's window to get a "blob:moz-extension://..." URL */
+    const blurl = cmdwin.URL.createObjectURL(blob);
+
+    /* pretty sure this happens automatically anyway */
+    addEventListener("unload", () => URL.revokeObjectURL(blurl));
+
+    /* make the iframe, give it the blob src, have it fill the screen and ignore the mouse */
+    h.iframe = cmddoc.createElement("iframe");
+    h.iframe.src = blurl;
+    h.iframe.style.position = "fixed";
+    h.iframe.style.top = 0;
+    h.iframe.style.left = 0;
+    h.iframe.style.width = "100%";
+    h.iframe.style.height = "100%";
+    h.iframe.style["z-index"] = 2147483646;
+    h.iframe.style.border = "none";
+    h.iframe.scrolling = "no";
+    h.iframe.style["pointer-events"] = "none";
+    h.iframe.style.display = "none";
+
+    document.documentElement.appendChild(h.iframe);
+
+    /* can't put javascript in the iframe source so add everything once it's loaded */
+    h.iframe.onload = () => {
+        const w = h.iframe.contentWindow;
+        const d = h.iframe.contentDocument;
+
+        const tabGrid = {
+            el: d.getElementById("tabs"),
+            first: 0,
+            rangeStyle: d.createElement("style"),
+        };
+
+        /* let tab grid be accessed through the iframe's content window (for testing mainly) */
+        w.newTabGrid = tabGrid;
+
+        /* rangeStyle sets which grid cells are visible */
+        d.head.appendChild(tabGrid.rangeStyle);
+
+        /* this is used with next() and prev() to change which tabs are shown */
+        tabGrid.setRange = (from, to) => tabGrid.rangeStyle.textContent = `.TridactylTab:nth-child(-n+${from}), .TridactylTab:nth-child(n+${to+1}) { display:none; }`;
+
+        tabGrid.next = () => {
+            if (tabGrid.first + tabGrid.maxVisibleCells < tabGrid.el.children.length) {
+                tabGrid.first = Math.min(tabGrid.el.children.length - 1, tabGrid.first + tabGrid.maxVisibleCells);
+                tabGrid.setRange(tabGrid.first, tabGrid.first + tabGrid.maxCells);
+            }
+        };
+
+        tabGrid.prev = () => {
+            tabGrid.first = Math.max(0, tabGrid.first - tabGrid.maxVisibleCells);
+            tabGrid.setRange(tabGrid.first, tabGrid.first + tabGrid.maxCells);
+        };
+
+        /* for the buttons above the tab grid */
+        tabGrid.ctrlCallbacks = {
+            prev: () => {
+                tabGrid.prev();
+                return h.hint();
+            },
+            next: () => {
+                tabGrid.next();
+                return h.hint();
+            },
+            close: () => {
+                return tri.excmds.tabclose();
+            },
+            newtab: () => {
+                h.hide();
+                return tri.excmds.tabopen();
+            },
+            search: () => {
+                h.hide();
+                return tri.excmds.fillcmdline("taball");
+            },
+        };
+
+        /* calculate how many tab cells can fit completely within the screen */
+        tabGrid.calcMaxCells = (numTabs) => {
+            const compStyle = getComputedStyle(tabGrid.el);
+
+            let gridTop = tabGrid.el.getBoundingClientRect().top;
+            /* px value thanks to that css workaround */
+            let cellHeightPx = parseFloat(compStyle.backgroundSize);
+
+            let maxRows = Math.max(1, Math.floor((innerHeight - gridTop) / cellHeightPx));
+            let numCols = compStyle.gridTemplateColumns.split(" ").length;
+            let maxTabs = compStyle.getPropertyValue("--tritab-max-tabs");
+
+            tabGrid.maxVisibleCells = Math.min(numCols * maxRows, maxTabs);
+            tabGrid.maxCells = Math.min(numTabs, maxTabs, tabGrid.maxVisibleCells);
+        };
+
+        /* create html elements from tab data */
+        tabGrid.tabsToGrid = async (bTabAll = false) => {
+            const thiswin = (await tri.browserBg.windows.getCurrent()).id;
+
+            /* to get container info using cookieStoreIds as keys */
+            let containers = (await tri.browserBg.contextualIdentities.query({})).reduce((acc, cur) => {
+                acc[cur.cookieStoreId] = cur;
+                return acc;
+            }, {});
+
+            let tabs = await tri.browserBg.tabs.query(bTabAll ? {} : {
+                currentWindow: true
+            });
+
+            let frag = d.createDocumentFragment();
+
+            /* for % and # prefixes, could probably neaten this up */
+            let mostRecentAccessed = 0;
+            let secondMost = 0;
+            let currTab = 0;
+            let prevTab = -1;
+
+            let winnum = 0;
+            let windexes = {};
+
+            tabs.every((tab, i) => {
+                let cell = d.getElementById("tabTemplate").content.cloneNode(true);
+
+                if (!windexes[tab.windowId]) windexes[tab.windowId] = ++winnum;
+
+                /* this was slightly more complex than I thought and is now ugly. */
+                /* checking as we iterate for the two most recently used tabs */
+                if (tab.windowId === thiswin) {
+                    if (tab.lastAccessed > mostRecentAccessed) {
+                        secondMost = mostRecentAccessed;
+                        mostRecentAccessed = tab.lastAccessed;
+                        prevTab = currTab;
+                        currTab = i;
+                    } else if (t.lastAccessed > secondMost) {
+                        secondMost = tab.lastAccessed;
+                        prevTab = i;
+                    }
+                }
+
+                if (tab.favIconUrl !== undefined) cell.querySelector(".favicon").src = tab.favIconUrl;
+                else cell.querySelector(".favicon").style.visibility = "hidden";
+
+                /* prefixes same as :tab and :taball */
+                let prefix = "";
+                if (tab.pinned) prefix += "P";
+                if (tab.audible) prefix += "A";
+                if (tab.mutedInfo.muted) prefix += "M";
+                if (tab.discarded) prefix += "D";
+
+                cell.querySelector(".prefix").textContent = prefix;
+                cell.querySelector(".title").textContent = tab.title;
+                cell.querySelector(".url").textContent = tab.url;
+                cell.querySelector(".wintabindex").textContent = (bTabAll ? windexes[tab.windowId] + "." : "") + (tab.index + 1);
+
+                /* style according to tab containers */
+                if (tab.incognito) {
+                    cell.querySelector(".container").setAttribute("style", `background-image: url("chrome://global/skin/icons/indicator-private-browsing.svg")`);
+                    cell.querySelector(".TridactylTab").setAttribute("style", "--tritab-outline-color: var(--tritab-incognito-outline-color);");
+
+                } else if (tab.cookieStoreId !== "firefox-default") {
+                    cell.querySelector(".container").setAttribute("style", `mask-image:url("${containers[tab.cookieStoreId].iconUrl}"); background-color: ${containers[tab.cookieStoreId].colorCode};`);
+
+                    cell.querySelector(".TridactylTab").setAttribute("style", `--tritab-outline-color: ${containers[tab.cookieStoreId].colorCode};`);
+                }
+
+                /* tab.id set within the html elements so it's easily accessible when selected as a hint */
+                cell.querySelector(".TridactylTab").setAttribute("tabid", tab.id);
+
+                frag.appendChild(cell);
+
+                return true;
+            });
+
+            /* after iterating through all tabs we can correctly add current/previous tab prefixes */
+            frag.children[currTab].querySelector(".prefix").textContent = "%" + frag.children[currTab].querySelector(".prefix").textContent;
+            if (prevTab > -1) {
+                frag.children[prevTab].querySelector(".prefix").textContent = "#" + frag.children[prevTab].querySelector(".prefix").textContent;
+            }
+
+
+            tabGrid.calcMaxCells(tabs.length);
+            tabGrid.setRange(0, tabGrid.maxVisibleCells);
+
+            /* fill empty spaces with fake tabs so the keys for selecting tabs don't change after pressing next/prev  */
+            if (tabs.length > tabGrid.maxVisibleCells) {
+                for (let i = 0; i < tabGrid.maxVisibleCells - tabs.length % tabGrid.maxVisibleCells; ++i) {
+                    frag.appendChild(d.getElementById("fakeTabTemplate").content.cloneNode(true));
+                }
+            }
+
+            tabGrid.el.replaceChildren(frag);
+
+        };
+
+        h.hide = () => {
+            h.iframe.style.display = "none";
+            tabGrid.el.replaceChildren();
+        };
+
+        h.hint = async () => {
+            /* ctrls concatenated so that the tab elements get the choicest keys for hinting */
+            tri.hinting_content.hintElements(Array.from(tabGrid.el.children).concat(Array.from(d.getElementById("ctrls").children)), {
+                callback: (t) => {
+                    /* nothing selected, ie hit <Esc> */
+                    if (!t) {
+                        h.hide();
+                        return;
+                    }
+                    const id = t.getAttribute("tabid");
+
+                    if (id) {
+                        /* keep everything the same and hint again if selecting a fake tab */
+                        /* maybe fake tabs' z-index could be higher than hint spans so you don't even see them? */
+                        if (id === "fake") {
+                            return h.hint();
+                        } else {
+                            h.hide();
+                            return tri.webext.goToTab(Number(id));
+                        }
+                    } else {
+                        return tabGrid.ctrlCallbacks[t.id]();
+                    }
+                }
+            });
+        };
+
+        h.showAndHint = async (bAllTabs = false) => {
+            h.iframe.style.display = "revert";
+            await tabGrid.tabsToGrid(bAllTabs);
+            h.hint();
+        };
+
+        h.showAndHint(JS_ARGS[1] === "-a");
+    };
 };
 Ω
