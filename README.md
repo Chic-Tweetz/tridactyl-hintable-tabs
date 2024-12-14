@@ -2,6 +2,8 @@
 
 Display currently open tabs and use Tridactyl's hinting to select and switch to one.
 
+## Usage
+
 Copy and paste the entirety of [hinttabs](hinttabs) into the Tridactyl command line to define a command, `hinttabs`
 
 `:hinttabs` will show tabs in the current window and hint them to select one.
